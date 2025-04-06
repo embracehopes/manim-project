@@ -1,0 +1,961 @@
+from re import L
+from manim import *
+import numpy as np
+
+class CardioideDerivation(Scene):
+    def construct(self):
+        # 设置白色背景
+        self.camera.background_color = WHITE
+
+        
+        # 创建标题
+        self.title = Text("心脏线(Cardioid)轨迹的严格推导", font_size=40, color=RED)
+        self.title.move_to(ORIGIN)
+        self.play(Write(self.title))
+        self.wait(0.5)
+        self.play(FadeOut(self.title))
+        
+        # 第一部分：基本设定和推导条件
+        self.show_basic_setup()
+        
+        # 第二部分：运动参数化分析
+        self.show_motion_parameterization()
+        
+        # 第三部分：轨迹推导过程
+        self.show_trajectory_derivation()
+        
+        # 第四部分：极坐标形式
+        self.show_polar_form()
+        
+   
+        # 结论
+        self.show_conclusion()
+        
+        # 结束动画
+        self.wait(1)
+        self.play(FadeOut(self.title), FadeOut(*self.mobjects))
+        
+    def show_basic_setup(self):
+        # 创建一个左侧内容区域和右侧演示区域
+        left_side = Rectangle(height=7, width=5, stroke_opacity=0, fill_opacity=0)
+        left_side.to_edge(LEFT, buff=0.5)
+        
+        right_side = Rectangle(height=7, width=5, stroke_opacity=0, fill_opacity=0)
+        right_side.to_edge(RIGHT, buff=0.5)
+        
+        # 添加到场景中
+        self.add(left_side, right_side)
+        """展示基本设定和条件"""
+        section_title = Text("推导条件与基本设定", font_size=36, color=BLACK)
+        section_title.next_to(left_side.get_top(), DOWN, buff=0.3)
+        section_title.set_color_by_gradient((BLUE, GREEN))
+        self.play(Write(section_title))
+        
+        # 创建坐标系
+        axes = Axes(
+            x_range=[-4, 4, 1],
+            y_range=[-3, 3, 1],
+            x_length=8,
+            y_length=6,
+            axis_config={"color": DARK_BLUE, "stroke_width": 2},
+        )
+        
+        # 添加坐标轴标签
+        labels = VGroup(
+            Text("x", font_size=24, color=DARK_BLUE).next_to(axes.x_axis, RIGHT),
+            Text("y", font_size=24, color=DARK_BLUE).next_to(axes.y_axis, UP)
+        )
+        
+        # 创建网格
+        grid = NumberPlane(
+            x_range=[-3, 3, 1],
+            y_range=[-3, 3, 1],
+            x_length=6,
+            y_length=6,
+            background_line_style={
+                "stroke_color": LIGHT_GREY,
+                "stroke_width": 1,
+                "stroke_opacity": 0.3
+            },
+            axis_config={"stroke_opacity": 0}
+        )
+        
+        self.play(Create(grid), Create(axes), Write(labels))
+        
+        # 创建固定圆
+        fixed_circle = Circle(radius=1, color=BLUE)
+        fixed_circle_label = Text("固定圆 O: R=1", font_size=20, color=BLUE_E)
+        fixed_circle_label.next_to(fixed_circle, UL, buff=0.1)
+        fixed_circle_equation = MathTex(r"x^2 + y^2 = 1", color=BLUE_E, font_size=24)
+        fixed_circle_equation.next_to(fixed_circle_label, DOWN, buff=0.2)
+        
+        # 创建动圆（初始位置）
+        moving_circle = Circle(radius=1, color=RED)
+        moving_circle.shift(RIGHT * 2)  # 移动到(2,0)点
+        moving_circle_label = Text("动圆 C: r=1", font_size=20, color=RED)
+        moving_circle_label.next_to(moving_circle, UR, buff=0.1)
+        
+        # 创建点A
+        point_A = Dot(RIGHT, color=GREEN)
+        point_A_label = Text("A(1,0)", font_size=20, color=GREEN)
+        point_A_label.next_to(point_A, DR, buff=0.1)
+        
+        # 创建点P（初始与A重合）
+        point_P = Dot(RIGHT, color=ORANGE)
+        point_P_label = Text("点P", font_size=20, color=ORANGE)
+        point_P_label.next_to(point_P, DOWN, buff=0.2)
+        
+        # 添加所有元素
+        self.play(
+            Create(fixed_circle),
+            Write(fixed_circle_label),
+            Write(fixed_circle_equation),
+            Create(moving_circle),
+            Write(moving_circle_label),
+            Create(point_A),
+            Write(point_A_label),
+            Create(point_P),
+            Write(point_P_label)
+        )
+        
+        # 显示条件说明文字
+        condition_text = VGroup(
+            Text("• 固定圆O：中心在原点，半径R=1", color=BLACK, font_size=24),
+            Text("• 动圆C：半径r=1，初始与圆O在点A处外切", color=BLACK, font_size=24),
+            Text("• 标记点P：初始位置与A重合", color=BLACK, font_size=24),
+            Text("• 滚动条件：无滑动", color=BLACK, font_size=24),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3)
+        condition_text.to_edge(LEFT, buff=0.5).shift(DOWN * 2.5)
+        
+        self.play(Write(condition_text))
+        self.wait(1.5)
+        
+        # 清除场景，保留标题
+        self.play(
+            FadeOut(condition_text),
+            FadeOut(fixed_circle),
+            FadeOut(fixed_circle_label),
+            FadeOut(fixed_circle_equation),
+            FadeOut(moving_circle),
+            FadeOut(moving_circle_label),
+            FadeOut(point_A),
+            FadeOut(point_A_label),
+            FadeOut(point_P),
+            FadeOut(point_P_label),
+            FadeOut(grid),
+            FadeOut(axes),
+            FadeOut(labels),
+            FadeOut(section_title)
+        )
+        
+    def show_motion_parameterization(self):
+        """展示运动参数化分析"""
+        # 创建一个左侧内容区域和右侧演示区域
+        left_side = Rectangle(height=7, width=5, stroke_opacity=0, fill_opacity=0)
+        left_side.to_edge(LEFT, buff=0.5)
+        
+        right_side = Rectangle(height=7, width=5, stroke_opacity=0, fill_opacity=0)
+        right_side.to_edge(RIGHT, buff=0.5)
+        
+        # 添加到场景中
+        self.add(left_side, right_side)
+        
+        # 创建左侧的标题和推导内容
+        section_title = Text("运动参数化分析", font_size=36, color=DARK_BLUE)
+        section_title.set_color_by_gradient((BLUE, GREEN))
+        section_title.next_to(left_side.get_top(), DOWN, buff=0.3)
+        section_title.align_to(left_side, LEFT).shift(RIGHT * 0.3)
+        self.play(Write(section_title))
+        
+        # 右侧创建坐标系
+        axes = Axes(
+            x_range=[-3, 3, 1],
+            y_range=[-3, 3, 1],
+            x_length=6,
+            y_length=6,
+            axis_config={"color": DARK_BLUE, "stroke_width": 2},
+        ).move_to(right_side.get_center())
+        
+        # 添加坐标轴标签
+        labels = VGroup(
+            Text("x", font_size=20, color=DARK_BLUE).next_to(axes.x_axis, RIGHT),
+            Text("y", font_size=20, color=DARK_BLUE).next_to(axes.y_axis, UP)
+        )
+        
+        self.play(Create(axes), Write(labels))
+        
+        # 圆心坐标公式 - 左侧
+        circle_center_title = Text("圆心坐标:", font_size=26, color=DARK_BLUE)
+        circle_center_eq = MathTex(
+            r"C(\theta) = (2\cos\theta,\ 2\sin\theta)",
+            font_size=26,
+            color=DARK_BLUE
+        )
+    
+        circle_center_group = VGroup(circle_center_title, circle_center_eq).arrange(RIGHT, buff=0.3)
+        circle_center_group.next_to(section_title, DOWN, buff=0.5)
+        circle_center_group.align_to(left_side, LEFT).shift(RIGHT * 0.3)
+        
+        # 强调系数2 - 左侧
+        coef_explanation = Text("系数2来自R+r=1+1=2", font_size=22, color=BLACK)
+        coef_explanation.next_to(circle_center_group, DOWN, buff=0.3)
+        coef_explanation.align_to(left_side, LEFT).shift(RIGHT * 0.3)
+        
+        # 添加无滑动条件标题 - 左侧
+        no_slip_title = Text("无滑动条件", font_size=26, color=DARK_BLUE)
+        no_slip_title.next_to(coef_explanation, DOWN, buff=0.5)
+        no_slip_title.align_to(left_side, LEFT).shift(RIGHT * 0.3)
+        
+        # 无滑动条件公式 - 左侧
+        arc_length_title = Text("弧长:", font_size=24, color=BLACK)
+        no_slip_eq = MathTex(
+            r"\underbrace{R\theta}_{\text{fixed circle}} = \underbrace{r\phi}_{\text{moving circle}} \Rightarrow \phi = \theta",
+            font_size=24,
+            color=BLACK
+        )
+        
+        no_slip_group = VGroup(arc_length_title, no_slip_eq).arrange(RIGHT, buff=0.3)
+        no_slip_group.next_to(no_slip_title, DOWN, buff=0.3)
+        no_slip_group.align_to(left_side, LEFT).shift(RIGHT * 0.3)
+        
+        # 右侧动画元素
+        
+        # 创建固定圆 - 右侧
+        fixed_circle = Circle(radius=1, color=BLUE)
+        fixed_circle.move_to(axes.c2p(0, 0))
+        fixed_circle_label = Text("O", font_size=20, color=BLUE)
+        fixed_circle_label.move_to(fixed_circle.get_center() + DR * 0.2)
+        
+        # 初始角度
+        theta = 0
+        
+        # 动圆圆心轨迹 - 右侧
+        circle_center_path = ParametricFunction(
+            lambda t: axes.c2p(2*np.cos(t), 2*np.sin(t)),
+            t_range=[0, TAU],
+            color=GRAY,
+            stroke_opacity=0.5
+        )
+        
+        # 动圆初始位置 - 右侧
+        center_x = 2 * np.cos(theta)
+        center_y = 2 * np.sin(theta)
+        moving_circle = Circle(radius=1, color=RED)
+        moving_circle.move_to(axes.c2p(center_x, center_y))
+        moving_circle_label = Text("C", font_size=20, color=RED)
+        # 将C标签放在动圆圆心位置
+        moving_circle_label.move_to(axes.c2p(center_x, center_y)+UR*0.2)
+        
+        # 加粗显示圆心连线 - 右侧
+        center_connection = Line(
+            start=axes.c2p(0, 0),
+            end=axes.c2p(center_x, center_y),
+            color=RED,
+            stroke_width=3
+        )
+        
+        # 显示角度θ - 右侧，修正弧和标签位置
+        angle = Arc(
+            radius=0.5,
+            angle=theta,
+            color=GREEN,
+            arc_center=axes.c2p(0, 0)  # 确保弧的中心在原点
+        )
+        angle_label = MathTex(r"\theta", font_size=24, color=GREEN)
+        angle_label.next_to(angle, RIGHT, buff=0.1)
+        
+        # 接触点 - 右侧
+        contact_point = Dot(axes.c2p(np.cos(theta), np.sin(theta)), color=GREEN)
+        contact_point_label = Text("A", font_size=18, color=GREEN)
+        contact_point_label.next_to(contact_point, UR, buff=0.1)
+        
+        # 添加φ角标注 - 在接触点A到动圆圆心C到P点之间
+        phi_angle = Arc(
+            radius=0.3,
+            start_angle=theta-PI,  # φ=θ-90度
+            angle=theta,  # 初始φ=θ=0
+            color=PURPLE,
+            arc_center=axes.c2p(center_x, center_y)  # 确保弧的中心在动圆圆心
+        )
+        phi_label = MathTex(r"\phi", font_size=24, color=PURPLE)
+        phi_label.move_to(axes.c2p(center_x + 0.2, center_y + 0.2))  # 将标签放在弧旁边合适位置
+        
+        # 左侧推导内容显示
+        self.play(Write(circle_center_group))
+        self.play(Write(coef_explanation))
+        self.play(Write(no_slip_title))
+        self.play(Write(no_slip_group))
+        
+        # 右侧演示元素显示
+        self.play(
+            Create(fixed_circle),
+            Write(fixed_circle_label),
+            Create(circle_center_path),
+            Create(moving_circle),
+            Write(moving_circle_label),
+            Create(center_connection),
+            Create(angle),
+            Write(angle_label),
+            Create(contact_point),
+            Write(contact_point_label),
+            Create(phi_angle),
+            Write(phi_label)
+        )
+        
+        # 初始P点位置 - 右侧
+        p_x = 2*np.cos(theta) - np.cos(2*theta)
+        p_y = 2*np.sin(theta) - np.sin(2*theta)
+        point_P = Dot(axes.c2p(p_x, p_y), color=ORANGE)
+        point_P_label = Text("P", font_size=20, color=ORANGE)
+        point_P_label.next_to(point_P, DR, buff=0.1)
+        
+        # 显示辅助线 - 从动圆圆心到P点
+        center_to_p = Line(
+            start=axes.c2p(center_x, center_y),
+            end=axes.c2p(p_x, p_y),
+            color=ORANGE,
+            stroke_width=2
+        )
+        
+        self.play(Create(point_P), Write(point_P_label), Create(center_to_p))
+        
+        # 轨迹 - 右侧
+        path = VMobject(color=ORANGE, stroke_width=4)
+        path_points = [axes.c2p(p_x, p_y)]
+        path.set_points_smoothly(path_points)
+        self.add(path)
+        
+        # 解释P点位置
+        p_position_explanation = Text(
+            "• P点位置：动圆上的标记点",
+            font_size=22,
+            color=BLACK
+        )
+        p_position_explanation.next_to(no_slip_group, DOWN, buff=0.5)
+        p_position_explanation.align_to(left_side, LEFT).shift(RIGHT * 0.3)
+        self.play(Write(p_position_explanation))
+        
+        # 显示P点与动圆的关系
+        rel_explanation = Text(
+            "• P点与动圆圆心C的相对位置随φ变化",
+            font_size=22,
+            color=BLACK
+        )
+        rel_explanation.next_to(p_position_explanation, DOWN, buff=0.2)
+        rel_explanation.align_to(left_side, LEFT).shift(RIGHT * 0.3)
+        self.play(Write(rel_explanation))
+        
+        # 动画：第一部分滚动（约前5帧）
+        frames_before_pause = 5
+        for i, t in enumerate(np.linspace(0, TAU * frames_before_pause / 30, frames_before_pause)):
+            # 更新动圆位置
+            new_center_x = 2 * np.cos(t)
+            new_center_y = 2 * np.sin(t)
+            
+            # 更新接触点
+            new_contact_x = np.cos(t)
+            new_contact_y = np.sin(t)
+            
+            # 更新P点位置（使用心脏线参数方程）
+            new_p_x = 2*np.cos(t) - np.cos(2*t)
+            new_p_y = 2*np.sin(t) - np.sin(2*t)
+            
+            # 更新动圆
+            new_moving_circle = Circle(radius=1, color=RED)
+            new_moving_circle.move_to(axes.c2p(new_center_x, new_center_y))
+            
+            # 更新动圆上的φ角，确保弧正确定位
+            new_phi_angle = Arc(
+                radius=0.3,
+                start_angle=t-PI,  # φ=θ度
+                angle=t,  # φ = θ
+                color=PURPLE,
+                arc_center=axes.c2p(new_center_x, new_center_y)  # 确保弧的中心在动圆圆心
+            )
+            
+            # 更新φ标签位置 - 放在动圆接触点和P点之间
+            # 计算合适的φ标签位置（在接触点和圆心的连线附近）
+            contact_to_center_x = new_center_x - new_contact_x
+            contact_to_center_y = new_center_y - new_contact_y
+            phi_label_x = new_center_x - 0.2 * np.cos(t + PI/4)  # 稍微偏离圆心
+            phi_label_y = new_center_y - 0.2 * np.sin(t + PI/4)  # 稍微偏离圆心
+            
+            # 更新从动圆圆心到P点的连线
+            new_center_to_p = Line(
+                start=axes.c2p(new_center_x, new_center_y),
+                end=axes.c2p(new_p_x, new_p_y),
+                color=ORANGE,
+                stroke_width=2
+            )
+            
+            # 更新θ角度显示，确保弧正确定位
+            new_angle = Arc(
+                radius=0.5,
+                angle=t,
+                color=GREEN,
+                arc_center=axes.c2p(0, 0)  # 确保弧的中心在原点
+            )
+            
+            # 更新连线
+            new_center_connection = Line(
+                start=axes.c2p(0, 0),
+                end=axes.c2p(new_center_x, new_center_y),
+                color=YELLOW,
+                stroke_width=3
+            )
+            
+            # 更新轨迹
+            path_points.append(axes.c2p(new_p_x, new_p_y))
+            new_path = VMobject(color=ORANGE, stroke_width=4)
+            new_path.set_points_smoothly(path_points)
+            
+            # 执行动画
+            self.play(
+                Transform(moving_circle, new_moving_circle),
+                moving_circle_label.animate.next_to(new_moving_circle.get_center(), UR),
+                Transform(center_connection, new_center_connection),
+                Transform(angle, new_angle),
+                angle_label.animate.next_to(new_angle, RIGHT, buff=0.1),
+                Transform(phi_angle, new_phi_angle),
+                phi_label.animate.move_to(axes.c2p(phi_label_x, phi_label_y)),
+                contact_point.animate.move_to(axes.c2p(new_contact_x, new_contact_y)),
+                contact_point_label.animate.next_to(axes.c2p(new_contact_x, new_contact_y), UR, buff=0.1),
+                point_P.animate.move_to(axes.c2p(new_p_x, new_p_y)),
+                point_P_label.animate.next_to(axes.c2p(new_p_x, new_p_y), DR, buff=0.1),
+                Transform(path, new_path),
+                Transform(center_to_p, new_center_to_p),
+                run_time=0.2
+            )
+        #过C向右做一个单位的虚线
+        # 计算虚线的起点和终点
+        line_start = axes.c2p(new_center_x, new_center_y)
+        line_end1 = axes.c2p(new_center_x + 1, new_center_y)
+        #以圆心为C，延长PC向量，AC向量一个单位长度的虚线
+        #计算PC向量
+        pc_vector_x = new_p_x - new_center_x
+        pc_vector_y = new_p_y - new_center_y
+        #计算AC向量
+        ac_vector_x = new_contact_x - new_center_x
+        ac_vector_y = new_contact_y - new_center_y
+
+        line_end2 = axes.c2p(new_center_x - pc_vector_x, new_center_y - pc_vector_y)
+        line_end3 = axes.c2p(new_center_x - ac_vector_x, new_center_y - ac_vector_y)
+        dashline1 = DashedLine(start=line_start, end=line_end1, color=GREY_D, stroke_width=2)
+        dashline2 = DashedLine(start=line_start, end=line_end2, color=GREY_D, stroke_width=2)   
+        dashline3 = DashedLine(start=line_start, end=line_end3, color=GREY_D, stroke_width=2)
+        # 添加虚线到场景中
+        self.play(Create(dashline1), Create(dashline2), Create(dashline3))
+        #标注三条虚线的夹角
+        angle_label1 = MathTex(r"\theta", font_size=24, color=GREEN)
+        angle_label1.move_to(axes.c2p(new_center_x + 0.35, new_center_y + 0.2))  # 将标签放在弧旁边合适位置
+        
+        angle_label2 = MathTex(r"\theta", font_size=24, color=GREEN)
+        angle_label2.move_to(axes.c2p(new_center_x , new_center_y + 0.3))  # 将标签放在弧旁边合适位置
+       
+        #标注PI-2*theta
+        angle_label3 = MathTex(r"\pi-2\theta", font_size=24, color=GREEN)
+        angle_label3.move_to(axes.c2p(new_center_x + 0.6, new_center_y - 0.3))  # 将标签放在弧旁边合适位置
+        self.play(Write(angle_label1), Write(angle_label2), Write(angle_label3))
+       
+        
+
+        # 暂停动画，显示详细推导过程
+        self.wait(2)
+        self.play(FadeOut(dashline1), FadeOut(dashline2), FadeOut(dashline3), FadeOut(angle_label1), FadeOut(angle_label2), FadeOut(angle_label3))
+           # 高亮显示φ角和φ=θ关系
+        self.play(
+            Indicate(phi_angle),
+            Indicate(phi_label)
+            
+           
+        )
+        ##把左侧的文字全部删去
+        self.play(
+            FadeOut(circle_center_group),
+            FadeOut(coef_explanation),
+            FadeOut(no_slip_title),
+            FadeOut(no_slip_group),
+            FadeOut(p_position_explanation),
+            FadeOut(rel_explanation)
+        )
+        
+        # 显示参数方程推导标题
+
+        
+        # 在图上添加说明
+        cp_angle_label = Text("φ=θ", font_size=16, color=PURPLE)
+        cp_angle_label.next_to(phi_angle, UR, buff=0.1)
+        self.play(Write(cp_angle_label))
+        
+     
+        #CP向量用2theta-PI表示，再化简
+        op_eq1 = MathTex(
+            r"\vec{OP} = \vec{OC} + \vec{CP}",
+            font_size=36,
+            color=BLACK
+        )
+         #CP向量用2theta-PI表示，大括号
+        op_eq2 = MathTex(
+             r"= (2\cos\theta, 2\sin\theta) + (\cos(2\theta - \pi), \sin(2\theta - \pi))",
+               font_size=36,
+            color=BLACK
+        )
+        
+       
+        
+        op_eq3 = MathTex(
+            r"= (2\cos\theta, 2\sin\theta) + (-\cos(2\theta), -\sin(2\theta))",
+            font_size=36,
+            color=BLACK
+        )
+        
+        
+        
+        op_eq4 = MathTex(
+            r"= (2\cos\theta - \cos(2\theta), 2\sin\theta - \sin(2\theta))",
+            font_size=36,
+            color=BLACK
+        )
+        op_group= VGroup(op_eq1, op_eq2, op_eq3, op_eq4 ).arrange(DOWN, aligned_edge=LEFT, buff=0.3)
+        op_group.next_to(section_title, DOWN, buff=0.5, aligned_edge=LEFT)
+        
+        self.play(Write(op_group))
+        
+        
+        # 最终参数方程
+        final_param_title = Text("心脏线参数方程", font_size=36, color=DARK_BLUE)
+        final_param_title.next_to(op_group, DOWN, buff=0.3)
+        final_param_title.align_to(left_side, LEFT).shift(RIGHT * 0.3)
+        
+        final_param_eq = MathTex(
+            r"\begin{cases} x = 2\cos\theta - \cos(2\theta) \\ y = 2\sin\theta - \sin(2\theta) \end{cases}",
+            font_size=26,
+            color=BLACK
+        )
+        final_param_eq.next_to(final_param_title, DOWN, buff=0.2)
+        final_param_eq.align_to(left_side, LEFT).shift(RIGHT * 0.3)
+        
+        self.play(Write(final_param_title), Write(final_param_eq))
+        self.play(Indicate(final_param_eq))
+        
+        # 继续动画的其余部分（约后21帧）
+        self.wait(1)  # 给观众时间理解公式
+        
+        # 移除推导过程文本以腾出空间
+        self.play(
+       
+            FadeOut(cp_angle_label),
+            FadeOut(op_eq1), FadeOut(op_eq2), FadeOut(op_eq3), FadeOut(op_eq4),
+          
+        )
+        
+        # 继续动画
+        for t in np.linspace(TAU * frames_before_pause / 30, TAU, 21):
+            # 更新动圆位置
+            new_center_x = 2 * np.cos(t)
+            new_center_y = 2 * np.sin(t)
+            
+            # 更新接触点
+            new_contact_x = np.cos(t)
+            new_contact_y = np.sin(t)
+            
+            # 更新P点位置（使用心脏线参数方程）
+            new_p_x = 2*np.cos(t) - np.cos(2*t)
+            new_p_y = 2*np.sin(t) - np.sin(2*t)
+            
+            # 更新动圆
+            new_moving_circle = Circle(radius=1, color=RED)
+            new_moving_circle.move_to(axes.c2p(new_center_x, new_center_y))
+            
+            # 更新动圆上的φ角
+            new_phi_angle = Arc(
+                radius=0.3,
+                start_angle=t-PI,  # φ=θ度
+                angle=t,  # φ = θ
+                color=PURPLE,
+                arc_center=axes.c2p(new_center_x, new_center_y)  # 确保弧的中心在动圆圆心
+            )
+            
+            # 更新φ标签位置 - 放在动圆接触点和P点之间
+            # 计算合适的φ标签位置（在接触点和圆心的连线附近）
+            contact_to_center_x = new_center_x - new_contact_x
+            contact_to_center_y = new_center_y - new_contact_y
+            phi_label_x = new_center_x + 0.2 * np.cos(t + PI/4)  # 稍微偏离圆心
+            phi_label_y = new_center_y + 0.2 * np.sin(t + PI/4)  # 稍微偏离圆心
+            
+            # 更新从动圆圆心到P点的连线
+            new_center_to_p = Line(
+                start=axes.c2p(new_center_x, new_center_y),
+                end=axes.c2p(new_p_x, new_p_y),
+                color=ORANGE,
+                stroke_width=2
+            )
+            
+            # 更新角度显示
+            new_angle = Arc(
+                radius=0.5,
+                angle=t,
+                color=GREEN,
+                arc_center=axes.c2p(0, 0)  # 确保弧的中心在原点
+            )
+            
+            # 更新连线
+            new_center_connection = Line(
+                start=axes.c2p(0, 0),
+                end=axes.c2p(new_center_x, new_center_y),
+                color=YELLOW,
+                stroke_width=3
+            )
+            
+            # 更新轨迹
+            path_points.append(axes.c2p(new_p_x, new_p_y))
+            new_path = VMobject(color=ORANGE, stroke_width=4)
+            new_path.set_points_smoothly(path_points)
+           
+            
+            # 执行动画
+            self.play(
+                Transform(moving_circle, new_moving_circle),
+                moving_circle_label.animate.move_to(new_moving_circle.get_center(), UR),
+                Transform(center_connection, new_center_connection),
+                Transform(angle, new_angle),
+                angle_label.animate.next_to(new_angle, RIGHT, buff=0.1),
+                Transform(phi_angle, new_phi_angle),
+                phi_label.animate.move_to(axes.c2p(phi_label_x, phi_label_y)),
+                contact_point.animate.move_to(axes.c2p(new_contact_x, new_contact_y)),
+                contact_point_label.animate.next_to(axes.c2p(new_contact_x, new_contact_y), UR, buff=0.1),
+                point_P.animate.move_to(axes.c2p(new_p_x, new_p_y)),
+                point_P_label.animate.next_to(axes.c2p(new_p_x, new_p_y), DR, buff=0.1),
+                Transform(path, new_path),
+                Transform(center_to_p, new_center_to_p),
+                run_time=0.2
+            )
+        
+     
+        
+        # 高亮最终形成的心脏线轨迹
+        self.play(Indicate(path))
+        self.play(Indicate(final_param_eq))
+        
+        self.wait(1)
+        
+        # 清除场景
+        self.play(
+            FadeOut(*self.mobjects),
+           
+        )
+        
+    def show_trajectory_derivation(self):
+        """展示轨迹推导过程"""
+        section_title = Text("轨迹参数方程推导过程", font_size=36, color=BLACK)
+        section_title.to_edge(UP, buff=0.2)
+        self.play(Write(section_title))
+        
+        # 参数方程推导标题
+        
+        standard_text = Text("采用标准旋轮线推导方法：", font_size=28, color=BLACK)
+        standard_text.next_to(section_title, DOWN, buff=0.3)
+        self.play(Write(standard_text))
+  
+        # 基本参数方程
+        param_eq1 = MathTex(
+            r"x &= (R+r)\cos\theta - r\cos\left(\theta + \phi\right)",
+            font_size=30, color=BLACK
+        )
+        param_eq2 = MathTex(
+            r"y &= (R+r)\sin\theta - r\sin\left(\theta + \phi\right)",
+            font_size=30, color=BLACK
+        )
+        
+        param_eqs = VGroup(param_eq1, param_eq2).arrange(DOWN, aligned_edge=LEFT, buff=0.3)
+        param_eqs.next_to(standard_text, DOWN, buff=0.4)
+        
+        self.play(Write(param_eqs))
+        
+        # 强调参数代入
+        substitution = Text("代入R=r=1和φ=θ得：", font_size=28, color=BLACK)
+        substitution.next_to(param_eqs, DOWN, buff=0.3)
+        self.play(Write(substitution))
+        
+        # 最终参数方程
+        final_eq1 = MathTex(
+            r"x &= 2\cos\theta - \cos(2\theta)", r"\quad(1)",
+            font_size=30, color=BLACK
+        )
+        final_eq2 = MathTex(
+            r"y &= 2\sin\theta - \sin(2\theta)", r"\quad(2)",
+            font_size=30, color=BLACK
+        )
+        
+        final_eqs = VGroup(final_eq1, final_eq2).arrange(DOWN, aligned_edge=LEFT, buff=0.3)
+        final_eqs.next_to(substitution, DOWN, buff=0.4)
+        
+        self.play(Write(final_eqs))
+        self.play(Indicate(final_eqs))
+        
+        # 几何解释标题
+        geom_title = Text("几何解释", font_size=30, color=BLACK)
+        geom_title.to_edge(DOWN, buff=2.0)
+        self.play(Write(geom_title))
+        
+        # 几何解释内容
+        geom_exp1 = Text("• 第一项 2cosθ 和 2sinθ：圆心C的运动轨迹", font_size=24, color=BLACK)
+        geom_exp2 = Text("• 第二项 -cos2θ 和 -sin2θ：点P相对于圆心的运动", font_size=24, color=BLACK)
+        
+        geom_exps = VGroup(geom_exp1, geom_exp2).arrange(DOWN, aligned_edge=LEFT, buff=0.3)
+        geom_exps.next_to(geom_title, DOWN, buff=0.3)
+        
+        self.play(Write(geom_exps))
+        
+        # 清除场景，确保有对象可供FadeOut
+        elements_to_fade = [section_title,       standard_text, 
+                           param_eqs, substitution, final_eqs, 
+                           geom_title, geom_exps]
+        
+        self.play(
+            *[FadeOut(elem) for elem in elements_to_fade],
+           
+        )
+    
+    def show_polar_form(self):
+        """展示极坐标形式推导"""
+        section_title = Text("极坐标形式转换", font_size=36, color=BLACK)
+        section_title.to_edge(UP, buff=2)
+        self.play(Write(section_title))
+        
+        # 参数方程推导标题
+        subsection_title = Text("从参数方程推导", font_size=30, color=BLACK)
+        subsection_title.next_to(section_title, DOWN, buff=0.5)
+        self.play(Write(subsection_title))
+        
+        # 极坐标推导
+        polar_derivation1 = MathTex(
+            r"r &= \sqrt{x^2 + y^2}", 
+            font_size=28, color=BLACK
+        )
+        polar_derivation2 = MathTex(
+            r"&= \sqrt{(2\cos\theta - \cos2\theta)^2 + (2\sin\theta - \sin2\theta)^2}", 
+            font_size=28, color=BLACK
+        )
+        polar_derivation3 = MathTex(
+            r"&= \sqrt{4 + 1 - 4\cos\theta} \quad \text{(Using trigonometric identities)}", 
+            font_size=28, color=BLACK
+        )
+        polar_derivation4 = MathTex(
+            r"&= \sqrt{5 - 4\cos\theta}", 
+            font_size=28, color=BLACK
+        )
+        
+        polar_steps = VGroup(
+            polar_derivation1, 
+            polar_derivation2, 
+            polar_derivation3, 
+            polar_derivation4
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3)
+        
+        polar_steps.next_to(subsection_title, DOWN, buff=0.4)
+        
+        # 逐步显示推导
+        self.play(Write(polar_derivation1))
+        self.wait(0.5)
+        self.play(Write(polar_derivation2))
+        self.wait(0.5)
+        self.play(Write(polar_derivation3))
+        self.wait(0.5)
+        self.play(Write(polar_derivation4))
+        self.play(Indicate(polar_derivation4))
+        
+        # 显示心脏线在极坐标下的样子
+        axes = NumberPlane(
+            x_range=[-3, 3, 1],
+            y_range=[-3, 3, 1],
+            x_length=6,
+            y_length=6,
+            background_line_style={
+                "stroke_color": LIGHT_GREY,
+                "stroke_width": 1,
+                "stroke_opacity": 0.3
+            },
+            axis_config={"color": DARK_BLUE}
+        ).scale(0.5)
+        axes.to_edge(RIGHT, buff=1)
+        
+        cardioid = ParametricFunction(
+            lambda t: axes.c2p(2*(1-np.cos(t))*np.cos(t), 2*(1-np.cos(t))*np.sin(t)),
+            t_range=[0, TAU],
+            color=RED
+        )
+        
+        polar_label = Text("极坐标下的心脏线", font_size=24, color=BLACK)
+        polar_label.next_to(axes, DOWN, buff=0.3)
+        
+        self.play(
+            Create(axes),
+            Create(cardioid),
+            Write(polar_label)
+        )
+        
+        self.wait(2)
+        
+        # 清除场景
+        self.play(
+            FadeOut(*self.mobjects),
+           
+        )
+   
+        
+    
+        
+        # 创建坐标系和心脏线
+        axes = Axes(
+            x_range=[-3, 3, 1],
+            y_range=[-3, 3, 1],
+            x_length=6,
+            y_length=6,
+            axis_config={"color": DARK_BLUE},
+        )
+        
+        axes.to_edge(DOWN, buff=1)
+        
+        cardioid = ParametricFunction(
+            lambda t: axes.c2p(
+                2 * np.cos(t) - np.cos(2 * t),
+                2 * np.sin(t) - np.sin(2 * t)
+            ),
+            t_range=[0, TAU],
+            color=RED
+        )
+        
+       
+        
+   
+    def show_conclusion(self):
+        """展示结论"""
+        section_title = Text("结论", font_size=45, color=RED_D)
+        section_title.to_edge(UP, buff=0.5)
+        self.play(Write(section_title))
+        
+        # 参数方程结论
+        param_conclusion = VGroup(
+            Text("心脏线参数方程：", font_size=28, color=BLACK),
+            MathTex(
+                r"\begin{cases} x = 2\cos\theta - \cos2\theta \\ y = 2\sin\theta - \sin2\theta \end{cases}",
+                font_size=32, color=BLACK
+            )
+        ).arrange(DOWN, buff=0.3, aligned_edge=LEFT)
+        
+        param_conclusion.next_to(section_title, DOWN, buff=0.5)
+        
+        # 极坐标方程结论
+        polar_conclusion = VGroup(
+            Text("极坐标方程：", font_size=28, color=BLACK),
+            MathTex(
+                r"r = 2(1 - \cos\theta)",
+                font_size=32, color=BLACK
+            )
+        ).arrange(DOWN, buff=0.3, aligned_edge=LEFT)
+        
+        polar_conclusion.next_to(param_conclusion, DOWN, buff=0.5)
+
+        conclusion_1=VGroup(param_conclusion,polar_conclusion).arrange(DOWN, buff=0.3).shift(LEFT*4)
+        self.play(Write(conclusion_1))
+        
+        
+        # 创建最终的心脏线动画
+        axes = Axes(
+            x_range=[-3, 3, 1],
+            y_range=[-3, 3, 1],
+            x_length=6,
+            y_length=6,
+            axis_config={"color": DARK_BLUE},
+        )
+        axes.to_corner(DR, buff=0.5)
+        
+        # 固定圆和动圆
+        fixed_circle = Circle(radius=1, color=BLUE)
+        fixed_circle.move_to(axes.c2p(0, 0))
+        
+        # 动圆初始位置
+        t = 0
+        center_x = 2 * np.cos(t)
+        center_y = 2 * np.sin(t)
+        moving_circle = Circle(radius=1, color=RED)
+        moving_circle.move_to(axes.c2p(center_x, center_y))
+        
+        # P点初始位置
+        p_x = 1
+        p_y = 0
+        point_P = Dot(axes.c2p(p_x, p_y), color=ORANGE)
+        
+        # 轨迹
+        path = VMobject(color=ORANGE, stroke_width=4)
+        path_points = [axes.c2p(p_x, p_y)]
+        path.set_points_smoothly(path_points)
+        
+        # 添加元素
+        self.play(
+            Create(axes),
+            Create(fixed_circle),
+            Create(moving_circle),
+            Create(point_P),
+            Create(path)
+        )
+        
+        # 动画：完整的心脏线形成
+        for t in np.linspace(0, TAU, 30):
+            # 更新动圆位置
+            center_x = 2 * np.cos(t)
+            center_y = 2 * np.sin(t)
+            
+            # 更新P点位置
+            p_x = 2 * np.cos(t) - np.cos(2 * t)
+            p_y = 2 * np.sin(t) - np.sin(2 * t)
+            
+            # 更新轨迹
+            path_points.append(axes.c2p(p_x, p_y))
+            new_path = VMobject(color=ORANGE, stroke_width=4)
+            new_path.set_points_smoothly(path_points)
+            
+            # 更新动圆
+            new_moving_circle = Circle(radius=1, color=RED)
+            new_moving_circle.move_to(axes.c2p(center_x, center_y))
+            
+            # 执行动画
+            self.play(
+                Transform(moving_circle, new_moving_circle),
+                point_P.animate.move_to(axes.c2p(p_x, p_y)),
+                Transform(path, new_path),
+                run_time=0.1
+            )
+        
+        # 最终心脏线强调
+        self.play(Indicate(path))
+        
+        self.wait(1)
+        
+    def create_trajectories(self):
+        # 修正P点轨迹计算，确保形成心脏线
+        p_trajectory = self.get_parametric_curve(
+            lambda t: self.fixed_circle.get_center() + 
+                      2 * np.array([np.cos(t), np.sin(t), 0]) +
+                      np.array([np.cos(2*t), np.sin(2*t), 0]),
+            t_range=[0, TAU],
+            color=RED
+        )
+
+    def show_derivation(self):
+        # ...existing code...
+        
+        # 调整公式显示，避免重叠
+        formulas = VGroup(
+            MathTex(r"P(t) = O + 2R\cdot(\cos t, \sin t) + r\cdot(\cos 2t, \sin 2t)"),
+            MathTex(r"P(t) = O + 2R\cdot(\cos t, \sin t) + r\cdot(\cos 2t, \sin 2t)"),
+            MathTex(r"P(t) = O + (2R+r\cos 2t, r\sin 2t)"),
+        )
+        
+        # 增加公式间距
+        formulas.arrange(DOWN, buff=0.8)  # 增加公式之间的垂直间距
+        formulas.to_edge(LEFT, buff=1)    # 向左对齐并留出边距
+        
+        # ...existing code...
+
