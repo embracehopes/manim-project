@@ -1,0 +1,39 @@
+# 1. 代码规范
+1.tex_template=TexTemplateLibrary.ctex##不加这个会报错，因为TEX没法直接识别汉语
+eg：explanation6 = Tex(
+            r"由于 $ \sin x $ 在 $ (0, \frac{\pi}{2}) $ 上是\textbf{凸函数}，"
+            r"我们使用割线放缩。",
+            tex_template=TexTemplateLibrary.ctex,color=TEAL
+        ).next_to(title2, DOWN, buff=0.5)
+2.write（里面只能加一个tex_template）
+3.3D要用ThreeDScene，2D要用Scene
+3.rightangle只能用在2D里面
+4.不要一步一步的渲染，要先写个框架初稿，然后再修改
+eg:        self.add_fixed_in_frame_mobjects(A3D_line1)
+        A3D_line1.to_corner(UL)
+        self.play(Write(A3D_line1))
+        triangleABE=Polygon(A,B,E).set_color(RED).set_opacity(0.5)
+        self.play(Indicate(triangleABE))
+        triangleABE_copy=triangleABE.copy()
+        self.add_fixed_in_frame_mobjects(triangleABE_copy)
+        triangleABE_copy.to_corner(DL)
+        self.play(TransformFromCopy(triangleABE,triangleABE_copy))
+5.在3D里面，要用add_fixed_in_frame_mobjects，然后再用to_corner
+6.self.camera.project_point()可以用来获取3D坐标的2D坐标（前两个数据是2D需要的，第三个数据是深度信息）
+7.LIGHT是光源，RIGHT是右边不要弄错
+8.self.play(Add)和self.add()的区别是前者是动画，后者是静态
+9.shift,move_to,align_to的区别是shift是相对于当前位置移动，move_to是第一次绝对位置移动，align_to是对齐
+10.
+config.frame_width = 4    # 设置宽度
+config.frame_height = 3   # 设置高度，比例为4:3
+config.background_color = WHITE  # 背景设为白色
+config.pixel_width = 800    # 宽度像素
+config.pixel_height = 600   # 高度像素，保持4:3比例
+宽度高度与像素宽高比一致，这些都是放在class的前面的
+11.单独给公式中某个东西的渲染颜色，建议用
+（1） substrings_to_isolate="x"  # 这个是给公式中需要渲染的部分加上一个标记
+（2） self.add(index_labels(text[0]))
+
+        text[0][1:3].set_color(YELLOW)
+        text[0][3:6].set_color(RED)
+（3）手动用“””给公式中需要渲染的部分加上一个标记
